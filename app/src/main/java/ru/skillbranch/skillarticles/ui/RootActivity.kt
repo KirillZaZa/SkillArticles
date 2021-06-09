@@ -1,10 +1,15 @@
 package ru.skillbranch.skillarticles.ui
 
 import android.annotation.SuppressLint
+import android.app.SearchManager
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.snackbar.Snackbar
@@ -13,14 +18,12 @@ import kotlinx.android.synthetic.main.layout_bottombar.*
 import kotlinx.android.synthetic.main.layout_submenu.*
 import ru.skillbranch.skillarticles.R
 import ru.skillbranch.skillarticles.extensions.dpToIntPx
-import ru.skillbranch.skillarticles.viewmodels.ArticleState
-import ru.skillbranch.skillarticles.viewmodels.ArticleViewModel
-import ru.skillbranch.skillarticles.viewmodels.BaseViewModel
-import ru.skillbranch.skillarticles.viewmodels.Notify
+import ru.skillbranch.skillarticles.viewmodels.*
 
 class RootActivity : AppCompatActivity() {
 
     private lateinit var viewModel: ArticleViewModel
+    private lateinit var searchView: SearchView
 
     @SuppressLint("ShowToast")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,9 +40,10 @@ class RootActivity : AppCompatActivity() {
             renderUi(it)
         }
 
-        viewModel.observerNotifications(this){
+        viewModel.observerNotifications(this) {
             renderNotifications(it)
         }
+
 
     }
 
@@ -48,20 +52,21 @@ class RootActivity : AppCompatActivity() {
             .setAnchorView(bottombar)
             .setActionTextColor(getColor(R.color.color_accent_dark))
 
-        when(notify){
-            is Notify.TextMessage -> {}
+        when (notify) {
+            is Notify.TextMessage -> {
+            }
 
             is Notify.ActionMessage -> {
-                snackbar.setAction(notify.actionLabel){
+                snackbar.setAction(notify.actionLabel) {
                     notify.actionHandler?.invoke()
                 }
             }
 
             is Notify.ErrorMessage -> {
-                with(snackbar){
+                with(snackbar) {
                     setBackgroundTint(getColor(R.color.design_default_color_error))
                     setActionTextColor(getColor(android.R.color.white))
-                    setAction(notify.errLabel){
+                    setAction(notify.errLabel) {
                         notify.errHandler?.invoke()
                     }
                 }
@@ -105,11 +110,14 @@ class RootActivity : AppCompatActivity() {
             btn_text_down.isChecked = true
         }
 
-        tv_text_content.text = if(data.isLoadingContent) "loading" else data.content.first() as String
+        tv_text_content.text =
+            if (data.isLoadingContent) "loading" else data.content.first() as String
 
         toolbar.title = data.title ?: "loading"
         toolbar.subtitle = data.category ?: "loading"
-        if(data.categoryIcon != null) toolbar.logo = getDrawable(data.categoryIcon as Int)
+        if (data.categoryIcon != null) toolbar.logo = getDrawable(data.categoryIcon as Int)
+
+        renderSearch(data)
     }
 
     private fun setupToolbar() {
@@ -125,4 +133,57 @@ class RootActivity : AppCompatActivity() {
             logo.layoutParams = it
         }
     }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                viewModel.handleSearchMenu(null, 0, 0)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.appbar_menu, menu)
+        return true
+    }
+
+
+    fun openSearch(item: MenuItem?) {
+        searchView = item?.actionView as SearchView
+        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+        searchView.queryHint = "Search"
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            /***
+             *
+             * Нужно создать список Pair <Int,Int> - каждое совпадение в тексте записать
+             * в этот список. Далее передать этот список в handleSearchMenu
+             */
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                val index = newText?.let { tv_text_content.text.indexOf(it) }
+
+                if(!newText.isNullOrBlank() && (index != 0 && index != null) && newText.isNotEmpty()){
+                    viewModel.handleSearchMenu(newText, index, newText.length)
+                }
+                return true
+            }
+
+        })
+    }
+
+    private fun renderSearch(data: ArticleState) {
+        // render UI
+
+    }
+
 }

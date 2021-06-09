@@ -11,6 +11,7 @@ abstract class BaseViewModel<T>(initState: T) : ViewModel() {
         value = initState
     }
 
+
     //not null current state
     protected val currentState
         get() = state.value!!
@@ -36,10 +37,12 @@ abstract class BaseViewModel<T>(initState: T) : ViewModel() {
         notifications.observe(owner, EventObserver{onNotify(it)})
     }
 
+
     @UiThread
     fun notify(content: Notify){
         notifications.value = Event(content)
     }
+
 
 
     /**
@@ -116,3 +119,4 @@ sealed class Notify(val message: String){
         val errHandler: (() -> Unit)?
     ): Notify(msg)
 }
+

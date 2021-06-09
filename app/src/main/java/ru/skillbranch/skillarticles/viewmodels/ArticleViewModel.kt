@@ -1,15 +1,18 @@
 package ru.skillbranch.skillarticles.viewmodels
 
 import androidx.lifecycle.LiveData
-import ru.skillbranch.skillarticles.ArticleData
-import ru.skillbranch.skillarticles.ArticlePersonalInfo
+import ru.skillbranch.skillarticles.data.ArticleData
+import ru.skillbranch.skillarticles.data.ArticlePersonalInfo
+import ru.skillbranch.skillarticles.data.SearchInfo
 import ru.skillbranch.skillarticles.data.repositories.ArticleRepository
 import ru.skillbranch.skillarticles.extensions.data.toAppSettings
 import ru.skillbranch.skillarticles.extensions.data.toArticlePersonalInfo
+import ru.skillbranch.skillarticles.extensions.data.toArticleSearchInfo
 import ru.skillbranch.skillarticles.extensions.format
+import ru.skillbranch.skillarticles.viewmodels.interfaces.IArticleViewModel
 
 class ArticleViewModel(private val articleId: String) :
-    BaseViewModel<ArticleState>(ArticleState()) {
+    BaseViewModel<ArticleState>(ArticleState()), IArticleViewModel {
 
     private val repository = ArticleRepository
 
@@ -21,7 +24,10 @@ class ArticleViewModel(private val articleId: String) :
                 title = article.title,
                 category = article.category,
                 categoryIcon = article.categoryIcon,
-                date = article.date.format()
+                date = article.date.format(),
+                isSearch = false,
+                searchPosition = 0,
+                searchQuery = null
             )
         }
 
@@ -47,25 +53,39 @@ class ArticleViewModel(private val articleId: String) :
                 isBigText = settings.isBigText
             )
         }
+
+        subscribeOnDataSource(repository.getSearchInfo()){searchInfo, state->
+            searchInfo ?: return@subscribeOnDataSource null
+            state.copy(
+                searchResult = searchInfo.searchResult,
+                isSearch = searchInfo.isSearch,
+                searchQuery = searchInfo.searchQuery,
+                searchPosition = searchInfo.searchPosition
+            )
+        }
+
     }
 
-    private fun getArticleContent(): LiveData<List<Any>?> {
+    override fun getArticleContent(): LiveData<List<Any>?> {
         return repository.loadArticleContent(articleId)
     }
 
-    private fun getArticleData(): LiveData<ArticleData?> {
+    override fun getArticleData(): LiveData<ArticleData?> {
         return repository.getArticle(articleId)
     }
 
-    private fun getArticlePersonalInfo(): LiveData<ArticlePersonalInfo?> {
+    override fun getArticlePersonalInfo(): LiveData<ArticlePersonalInfo?> {
         return repository.loadArticlePersonalInfo(articleId)
     }
 
-    fun handleLike() {
+    override fun getArticleSearchInfo(): LiveData<SearchInfo?> {
+        return repository.getSearchInfo()
+    }
+
+    override fun handleLike() {
         val toggleLike = {
             val info = currentState.toArticlePersonalInfo()
             repository.updateArticlePersonalInfo(info.copy(isLike = !info.isLike))
-
         }
 
         toggleLike()
@@ -81,7 +101,7 @@ class ArticleViewModel(private val articleId: String) :
         notify(msg)
     }
 
-    fun handleBookmark() {
+    override fun handleBookmark() {
         val toggleBookmark = {
             val info = currentState.toArticlePersonalInfo()
             repository.updateArticlePersonalInfo(info.copy(isBookmark = !info.isBookmark))
@@ -101,28 +121,45 @@ class ArticleViewModel(private val articleId: String) :
         notify(msg)
     }
 
-    fun handleNightMode() {
+    override fun handleNightMode() {
         val settings = currentState.toAppSettings()
         repository.updateSettings(settings.copy(isDarkMode = !settings.isDarkMode))
     }
 
-    fun handleShare() {
+    override fun handleShare() {
         val msg = "Share is not implemented"
         notify(Notify.ErrorMessage(msg, "OK", null))
     }
 
 
-    fun handleUpText() {
+    override fun handleUpText() {
         repository.updateSettings(currentState.toAppSettings().copy(isBigText = true))
     }
 
-    fun handleDownText() {
+    override fun handleDownText() {
         repository.updateSettings(currentState.toAppSettings().copy(isBigText = false))
 
     }
 
-    fun handleToggleMenu() {
+    override fun handleToggleMenu() {
         updateState { it.copy(isShowMenu = !it.isShowMenu) }
+    }
+
+
+    /**
+     *
+     * TODO:
+     * Апдейтить поиск (нахождение вариантов в тексте)
+     */
+    override fun handleSearchMenu(query: String?, index: Int, length: Int) {
+        val searchInfo = currentState.toArticleSearchInfo()
+        repository.updateSearchInfo(searchInfo.copy(
+            searchQuery = query,
+            isSearch = !searchInfo.isSearch,
+            searchPosition = index,
+            searchResult = index to length
+        ))
+
     }
 
 }
