@@ -30,6 +30,6 @@ interface IArticleViewModel {
 
     fun handleToggleMenu()
 
-    fun handleSearchMenu(query: String?, index: Int, length: Int)
+    fun handleSearchMenu(query: String?, resultList: List<Pair<Int, Int>>)
 
 }

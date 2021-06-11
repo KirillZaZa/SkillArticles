@@ -151,13 +151,15 @@ class ArticleViewModel(private val articleId: String) :
      * TODO:
      * Апдейтить поиск (нахождение вариантов в тексте)
      */
-    override fun handleSearchMenu(query: String?, index: Int, length: Int) {
+    override fun handleSearchMenu(query: String?, resultList: List<Pair<Int, Int>>) {
+        // A - line
+        // B - index
         val searchInfo = currentState.toArticleSearchInfo()
         repository.updateSearchInfo(searchInfo.copy(
             searchQuery = query,
             isSearch = !searchInfo.isSearch,
-            searchPosition = index,
-            searchResult = index to length
+            searchPosition = resultList[0].second,
+            searchResult = resultList
         ))
 
     }

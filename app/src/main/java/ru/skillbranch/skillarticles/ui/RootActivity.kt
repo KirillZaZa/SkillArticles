@@ -13,17 +13,34 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.snackbar.Snackbar
+import com.xeoh.android.texthighlighter.TextHighlighter
 import kotlinx.android.synthetic.main.activity_root.*
 import kotlinx.android.synthetic.main.layout_bottombar.*
 import kotlinx.android.synthetic.main.layout_submenu.*
 import ru.skillbranch.skillarticles.R
 import ru.skillbranch.skillarticles.extensions.dpToIntPx
 import ru.skillbranch.skillarticles.viewmodels.*
+import java.util.*
 
 class RootActivity : AppCompatActivity() {
 
     private lateinit var viewModel: ArticleViewModel
     private lateinit var searchView: SearchView
+    private lateinit var textHighlighter: TextHighlighter
+
+    companion object{
+        private var flag: Int = 0
+    }
+
+    /**
+     *
+     * TODO:
+     * сохранение состояния открытого searchView
+     *
+     * Найти баги
+     *
+     * Посмотреть дальнешие задания на сайте
+     */
 
     @SuppressLint("ShowToast")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -137,7 +154,14 @@ class RootActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                viewModel.handleSearchMenu(null, 0, 0)
+                if(flag == 1){
+                    textHighlighter.resetBackgroundColor()
+                    textHighlighter.resetForegroundColor()
+                    textHighlighter.resetTargets()
+                    flag = 2
+                }else if(flag == 2){
+                    finish()
+                }
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -152,10 +176,13 @@ class RootActivity : AppCompatActivity() {
 
 
     fun openSearch(item: MenuItem?) {
+        flag = 1
+
         searchView = item?.actionView as SearchView
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
 
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+
         searchView.queryHint = "Search"
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -170,20 +197,39 @@ class RootActivity : AppCompatActivity() {
              */
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                val index = newText?.let { tv_text_content.text.indexOf(it) }
+                val list = getWordsFound(newText)
+                viewModel.handleSearchMenu(newText, list)
 
-                if(!newText.isNullOrBlank() && (index != 0 && index != null) && newText.isNotEmpty()){
-                    viewModel.handleSearchMenu(newText, index, newText.length)
-                }
                 return true
             }
 
         })
     }
 
+    private fun getWordsFound(userQuery: String?): List<Pair<Int, Int>> {
+        val resultList = emptyList<Pair<Int,Int>>().toMutableList()
+        if(userQuery == null){
+            resultList.add(0, 0 to 0)
+        }
+        tv_text_content.text.forEachIndexed { i, str ->
+            val index = userQuery?.let { tv_text_content.text.toString().indexOf(str) } ?: -1
+            if (index != -1) {
+                val line = tv_text_content.layout.getLineForOffset(index)
+                resultList.add(i, index to line)
+            }
+        }
+
+        return resultList
+    }
+
     private fun renderSearch(data: ArticleState) {
         // render UI
-
+        textHighlighter = TextHighlighter()
+        textHighlighter
+            .addTarget(tv_text_content)
+            .setBackgroundColor(getColor(R.color.color_accent))
+            .setForegroundColor(getColor(R.color.color_primary_dark))
+            .highlight(data.searchQuery, TextHighlighter.CASE_INSENSITIVE_MATCHER)
     }
 
 }
