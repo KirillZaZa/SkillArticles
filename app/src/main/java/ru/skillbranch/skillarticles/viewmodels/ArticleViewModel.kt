@@ -158,7 +158,6 @@ class ArticleViewModel(private val articleId: String) :
         repository.updateSearchInfo(searchInfo.copy(
             searchQuery = query,
             isSearch = !searchInfo.isSearch,
-            searchPosition = resultList[0].second,
             searchResult = resultList
         ))
 

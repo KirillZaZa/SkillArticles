@@ -7,7 +7,6 @@
         <item name="windowActionBar">false</item>
         <item name="android:statusBarColor">@color/color_primary_dark</item>
         <item name="android:editTextColor">@color/color_on_surface</item>
-
         <item name="android:textColorSecondary">@color/color_accent</item>
         <item name="colorPrimary">@color/color_primary</item>
         <item name="colorPrimaryVariant">@color/color_primary_dark</item>
@@ -26,6 +25,7 @@
 
     <style name="ArticleBarsTheme" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">
         <item name="colorPrimary">@color/color_article_bar</item>
+        <item name="android:textColorPrimary">@color/color_accent</item>
         <item name="colorOnPrimary">@color/color_on_article_bar</item>
         <item name="colorSurface">@color/color_article_bar</item>
         <item name="colorControlNormal">@color/color_on_article_bar</item>

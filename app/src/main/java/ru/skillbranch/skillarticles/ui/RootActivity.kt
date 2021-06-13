@@ -5,6 +5,8 @@ import android.app.SearchManager
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.PersistableBundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ImageView
@@ -27,9 +29,11 @@ class RootActivity : AppCompatActivity() {
     private lateinit var viewModel: ArticleViewModel
     private lateinit var searchView: SearchView
     private lateinit var textHighlighter: TextHighlighter
+    private var isSearch = false
+    private var searchQuery = ""
 
-    companion object{
-        private var flag: Int = 0
+    companion object {
+        private var flag: Int = 1
     }
 
     /**
@@ -37,21 +41,22 @@ class RootActivity : AppCompatActivity() {
      * TODO:
      * сохранение состояния открытого searchView
      *
-     * Найти баги
-     *
      * Посмотреть дальнешие задания на сайте
      */
 
-    @SuppressLint("ShowToast")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_root)
+
         setupToolbar()
         setupBottombar()
         setupSubmenu()
+        Log.d("ONCREATE", "call")
 
         viewModel = ViewModelProvider(this, BaseViewModel.ViewModelFactory("0"))
             .get(ArticleViewModel::class.java)
+
+
 
         viewModel.observeState(this) {
             renderUi(it)
@@ -93,6 +98,7 @@ class RootActivity : AppCompatActivity() {
         snackbar.show()
     }
 
+
     private fun setupSubmenu() {
         btn_text_up.setOnClickListener { viewModel.handleUpText() }
         btn_text_down.setOnClickListener { viewModel.handleDownText() }
@@ -107,6 +113,9 @@ class RootActivity : AppCompatActivity() {
     }
 
     private fun renderUi(data: ArticleState) {
+        isSearch = data.isSearch
+        searchQuery = data.searchQuery ?: ""
+
         btn_settings.isChecked = data.isShowMenu
         if (data.isShowMenu) submenu.open() else submenu.close()
 
@@ -151,85 +160,94 @@ class RootActivity : AppCompatActivity() {
         }
     }
 
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                if(flag == 1){
-                    textHighlighter.resetBackgroundColor()
-                    textHighlighter.resetForegroundColor()
-                    textHighlighter.resetTargets()
-                    flag = 2
-                }else if(flag == 2){
+                Log.d("Item Selected", "${item.itemId}")
+                flag = 2
+                if (flag == 2) {
                     finish()
                 }
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
+
     }
+
+
 
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.appbar_menu, menu)
-        return true
-    }
 
-
-    fun openSearch(item: MenuItem?) {
-        flag = 1
-
+        val item = menu!!.findItem(R.id.action_search)
+        if(isSearch){
+            item.expandActionView()
+        }
         searchView = item?.actionView as SearchView
+
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
-
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
-
         searchView.queryHint = "Search"
-
+        searchView.setQuery(searchQuery, false)
+        searchView.setOnSearchClickListener {
+            viewModel.handleSearchMenu("", emptyList())
+        }
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return false
             }
 
-            /***
-             *
-             * Нужно создать список Pair <Int,Int> - каждое совпадение в тексте записать
-             * в этот список. Далее передать этот список в handleSearchMenu
-             */
-
             override fun onQueryTextChange(newText: String?): Boolean {
+                Log.d("OnChange", "onQueryTextChange: $newText")
                 val list = getWordsFound(newText)
+                isSearch = true
                 viewModel.handleSearchMenu(newText, list)
-
                 return true
             }
 
         })
+
+        return true
     }
 
+
     private fun getWordsFound(userQuery: String?): List<Pair<Int, Int>> {
-        val resultList = emptyList<Pair<Int,Int>>().toMutableList()
-        if(userQuery == null){
-            resultList.add(0, 0 to 0)
-        }
-        tv_text_content.text.forEachIndexed { i, str ->
-            val index = userQuery?.let { tv_text_content.text.toString().indexOf(str) } ?: -1
-            if (index != -1) {
-                val line = tv_text_content.layout.getLineForOffset(index)
-                resultList.add(i, index to line)
+        val resultList = ArrayList<Pair<Int, Int>>()
+        if (!userQuery.isNullOrEmpty()) {
+            val originText = tv_text_content.text.toString().lowercase()
+            val input = userQuery.lowercase()
+
+            var index = originText.indexOf(input, 0)
+            val i = 0
+            while (index != -1) {
+                resultList.add(i to index)
+                index = originText.indexOf(input, index + 1)
             }
+
         }
 
         return resultList
     }
 
     private fun renderSearch(data: ArticleState) {
-        // render UI
         textHighlighter = TextHighlighter()
-        textHighlighter
-            .addTarget(tv_text_content)
-            .setBackgroundColor(getColor(R.color.color_accent))
-            .setForegroundColor(getColor(R.color.color_primary_dark))
-            .highlight(data.searchQuery, TextHighlighter.CASE_INSENSITIVE_MATCHER)
+        if (data.searchQuery.isNullOrEmpty()) {
+            textHighlighter.resetTargets()
+            textHighlighter.resetTargets()
+            textHighlighter.resetForegroundColor()
+
+        } else {
+            textHighlighter
+                .addTarget(tv_text_content)
+                .setBackgroundColor(getColor(R.color.color_accent))
+                .setForegroundColor(getColor(R.color.color_primary_dark))
+                .highlight(data.searchQuery, TextHighlighter.CASE_INSENSITIVE_MATCHER)
+        }
+
+
     }
 
 }
