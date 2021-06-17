@@ -1,21 +1,22 @@
 package ru.skillbranch.skillarticles.ui
 
-import android.annotation.SuppressLint
 import android.app.SearchManager
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.PersistableBundle
+import android.text.Spannable
+import android.text.SpannableString
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.text.clearSpans
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.snackbar.Snackbar
-import com.xeoh.android.texthighlighter.TextHighlighter
 import kotlinx.android.synthetic.main.activity_root.*
 import kotlinx.android.synthetic.main.layout_bottombar.*
 import kotlinx.android.synthetic.main.layout_submenu.*
@@ -28,7 +29,6 @@ class RootActivity : AppCompatActivity() {
 
     private lateinit var viewModel: ArticleViewModel
     private lateinit var searchView: SearchView
-    private lateinit var textHighlighter: TextHighlighter
     private var isSearch = false
     private var searchQuery = ""
 
@@ -177,13 +177,11 @@ class RootActivity : AppCompatActivity() {
     }
 
 
-
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.appbar_menu, menu)
 
         val item = menu!!.findItem(R.id.action_search)
-        if(isSearch){
+        if (isSearch) {
             item.expandActionView()
         }
         searchView = item?.actionView as SearchView
@@ -215,38 +213,44 @@ class RootActivity : AppCompatActivity() {
 
 
     private fun getWordsFound(userQuery: String?): List<Pair<Int, Int>> {
-        val resultList = ArrayList<Pair<Int, Int>>()
+        val resultList = ArrayList<Pair<Int, Int>>() // first index, last index
         if (!userQuery.isNullOrEmpty()) {
-            val originText = tv_text_content.text.toString().lowercase()
-            val input = userQuery.lowercase()
+            val originText = tv_text_content.text.toString().lowercase(Locale.getDefault())
+            val input = userQuery.lowercase(Locale.getDefault())
+            var coincidence = originText.indexOf(input, 0)
 
-            var index = originText.indexOf(input, 0)
-            val i = 0
-            while (index != -1) {
-                resultList.add(i to index)
-                index = originText.indexOf(input, index + 1)
+            var i = 0
+            while (i < originText.length && coincidence != -1) {
+                coincidence = originText.indexOf(input, i)
+                if (coincidence == -1) {
+                    break
+                } else {
+                    resultList.add(i to i + input.length)
+                    i++
+                }
             }
-
         }
 
         return resultList
     }
 
     private fun renderSearch(data: ArticleState) {
-        textHighlighter = TextHighlighter()
-        if (data.searchQuery.isNullOrEmpty()) {
-            textHighlighter.resetTargets()
-            textHighlighter.resetTargets()
-            textHighlighter.resetForegroundColor()
+        val searchQuery = data.searchQuery
+        val spannable = SpannableString(tv_text_content.text)
 
+        if (searchQuery.isNullOrEmpty()) {
+            spannable.clearSpans()
         } else {
-            textHighlighter
-                .addTarget(tv_text_content)
-                .setBackgroundColor(getColor(R.color.color_accent))
-                .setForegroundColor(getColor(R.color.color_primary_dark))
-                .highlight(data.searchQuery, TextHighlighter.CASE_INSENSITIVE_MATCHER)
+            data.searchResult.forEach { list ->
+                spannable.setSpan(
+                    getColor(R.color.color_primary_dark),
+                    list.first,
+                    list.second,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                tv_text_content.setText(spannable, TextView.BufferType.SPANNABLE)
+            }
         }
-
 
     }
 

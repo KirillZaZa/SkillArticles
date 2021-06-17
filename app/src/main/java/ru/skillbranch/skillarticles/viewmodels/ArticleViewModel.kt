@@ -137,6 +137,16 @@ class ArticleViewModel(private val articleId: String) :
      * Апдейтить поиск (нахождение вариантов в тексте)
      */
     override fun handleSearchMenu(query: String?, resultList: List<Pair<Int, Int>>) {
+
+        /**
+         *
+         * resultList - переделать
+         *
+         * 1 аргумент - индекс начала строки
+         * 2 аргумент - индекс конца строки
+         *
+         */
+
         updateState { it.copy(
             searchQuery =  query,
             isSearch = !currentState.isSearch,
