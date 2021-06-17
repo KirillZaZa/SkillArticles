@@ -7,18 +7,20 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewAnimationUtils
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import com.google.android.material.shape.MaterialShapeDrawable
 import ru.skillbranch.skillarticles.R
 import ru.skillbranch.skillarticles.extensions.dpToPx
+import ru.skillbranch.skillarticles.ui.behaviors.SubmenuBehavior
 import kotlin.math.hypot
 
 class ArticleSubmenu @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-): ConstraintLayout(context, attrs, defStyleAttr) {
+): ConstraintLayout(context, attrs, defStyleAttr), CoordinatorLayout.AttachedBehavior {
 
     var isOpen = false
     private var centerX = context.dpToPx(200)
@@ -36,6 +38,8 @@ class ArticleSubmenu @JvmOverloads constructor(
         isOpen = true
         animatedShow()
     }
+
+
 
     fun close(){
         if(!isOpen || !isAttachedToWindow) return
@@ -111,6 +115,7 @@ class ArticleSubmenu @JvmOverloads constructor(
         }
     }
 
+    override fun getBehavior(): CoordinatorLayout.Behavior<*> = SubmenuBehavior()
 
 
 }
