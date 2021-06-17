@@ -3,11 +3,9 @@ package ru.skillbranch.skillarticles.viewmodels
 import androidx.lifecycle.LiveData
 import ru.skillbranch.skillarticles.data.ArticleData
 import ru.skillbranch.skillarticles.data.ArticlePersonalInfo
-import ru.skillbranch.skillarticles.data.SearchInfo
 import ru.skillbranch.skillarticles.data.repositories.ArticleRepository
 import ru.skillbranch.skillarticles.extensions.data.toAppSettings
 import ru.skillbranch.skillarticles.extensions.data.toArticlePersonalInfo
-import ru.skillbranch.skillarticles.extensions.data.toArticleSearchInfo
 import ru.skillbranch.skillarticles.extensions.format
 
 class ArticleViewModel(private val articleId: String) :
@@ -53,15 +51,6 @@ class ArticleViewModel(private val articleId: String) :
             )
         }
 
-        subscribeOnDataSource(repository.getSearchInfo()){searchInfo, state->
-            searchInfo ?: return@subscribeOnDataSource null
-            state.copy(
-                searchResult = searchInfo.searchResult,
-                isSearch = searchInfo.isSearch,
-                searchQuery = searchInfo.searchQuery,
-                searchPosition = searchInfo.searchPosition
-            )
-        }
 
     }
 
@@ -77,9 +66,6 @@ class ArticleViewModel(private val articleId: String) :
         return repository.loadArticlePersonalInfo(articleId)
     }
 
-    override fun getArticleSearchInfo(): LiveData<SearchInfo?> {
-        return repository.getSearchInfo()
-    }
 
     override fun handleLike() {
         val toggleLike = {
@@ -151,15 +137,11 @@ class ArticleViewModel(private val articleId: String) :
      * Апдейтить поиск (нахождение вариантов в тексте)
      */
     override fun handleSearchMenu(query: String?, resultList: List<Pair<Int, Int>>) {
-        // A - line
-        // B - index
-        val searchInfo = currentState.toArticleSearchInfo()
-        repository.updateSearchInfo(searchInfo.copy(
-            searchQuery = query,
-            isSearch = !searchInfo.isSearch,
+        updateState { it.copy(
+            searchQuery =  query,
+            isSearch = !currentState.isSearch,
             searchResult = resultList
-        ))
-
+        ) }
     }
 
 }

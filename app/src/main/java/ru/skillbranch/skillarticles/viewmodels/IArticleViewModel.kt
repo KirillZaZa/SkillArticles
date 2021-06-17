@@ -3,7 +3,6 @@ package ru.skillbranch.skillarticles.viewmodels
 import androidx.lifecycle.LiveData
 import ru.skillbranch.skillarticles.data.ArticleData
 import ru.skillbranch.skillarticles.data.ArticlePersonalInfo
-import ru.skillbranch.skillarticles.data.SearchInfo
 
 interface IArticleViewModel {
 
@@ -12,8 +11,6 @@ interface IArticleViewModel {
     fun getArticleData(): LiveData<ArticleData?>
 
     fun getArticlePersonalInfo(): LiveData<ArticlePersonalInfo?>
-
-    fun getArticleSearchInfo(): LiveData<SearchInfo?>
 
     fun handleLike()
 

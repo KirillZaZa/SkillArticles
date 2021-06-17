@@ -16,7 +16,6 @@ object LocalDataHolder {
     val articleInfo = MutableLiveData<ArticlePersonalInfo?>(null)
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val settings = MutableLiveData(AppSettings())
-    val searchInfo = MutableLiveData(SearchInfo())
 
 
     fun findArticle(articleId: String): LiveData<ArticleData?> {
@@ -38,12 +37,6 @@ object LocalDataHolder {
         return articleData
 
     }
-
-    fun findSearchInfo() = searchInfo
-    fun updateSearchInfo(info: SearchInfo){
-        searchInfo.value = info
-    }
-
     fun findArticlePersonalInfo(articleId: String): LiveData<ArticlePersonalInfo?> {
         GlobalScope.launch {
             if (isDelay) delay(500)
@@ -123,13 +116,6 @@ data class ArticlePersonalInfo(
 data class AppSettings(
     val isDarkMode: Boolean = false,
     val isBigText: Boolean = false
-)
-
-data class SearchInfo(
-    val isSearch: Boolean = false, // Режим поиска
-    val searchQuery: String? = null, // Поисковый запрос
-    val searchResult: List<Pair<Int, Int>> = emptyList(), // Результаты поиска
-    val searchPosition: Int = 0, //Текущая позиция найденного результата
 )
 
 val longText: String = """
