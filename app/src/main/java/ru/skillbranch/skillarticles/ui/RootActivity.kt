@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
+import android.text.style.BackgroundColorSpan
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -215,17 +216,17 @@ class RootActivity : AppCompatActivity() {
     private fun getWordsFound(userQuery: String?): List<Pair<Int, Int>> {
         val resultList = ArrayList<Pair<Int, Int>>() // first index, last index
         if (!userQuery.isNullOrEmpty()) {
-            val originText = tv_text_content.text.toString().lowercase(Locale.getDefault())
-            val input = userQuery.lowercase(Locale.getDefault())
+            val originText = tv_text_content.text.toString().toLowerCase()
+            val input = userQuery.toLowerCase()
             var coincidence = originText.indexOf(input, 0)
-
             var i = 0
             while (i < originText.length && coincidence != -1) {
                 coincidence = originText.indexOf(input, i)
                 if (coincidence == -1) {
                     break
                 } else {
-                    resultList.add(i to i + input.length)
+                    Log.d("GetWordsFound", "first: $i || second: ${i + input.length}")
+                    resultList.add(coincidence to coincidence + input.length)
                     i++
                 }
             }
@@ -237,17 +238,17 @@ class RootActivity : AppCompatActivity() {
     private fun renderSearch(data: ArticleState) {
         val searchQuery = data.searchQuery
         val spannable = SpannableString(tv_text_content.text)
-
         if (searchQuery.isNullOrEmpty()) {
             spannable.clearSpans()
         } else {
             data.searchResult.forEach { list ->
                 spannable.setSpan(
-                    getColor(R.color.color_primary_dark),
+                    BackgroundColorSpan(getColor(R.color.color_accent)),
                     list.first,
                     list.second,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
+                Log.d("RENDERSEARCH", "$list")
                 tv_text_content.setText(spannable, TextView.BufferType.SPANNABLE)
             }
         }
