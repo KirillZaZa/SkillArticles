@@ -5,9 +5,9 @@ import androidx.lifecycle.*
 
 abstract class BaseViewModel<T>(initState: T) : ViewModel() {
 
-    protected val notifications = MutableLiveData<Event<Notify>>()
+    val notifications = MutableLiveData<Event<Notify>>()
 
-    protected val state: MediatorLiveData<T> = MediatorLiveData<T>().apply {
+    val state: MediatorLiveData<T> = MediatorLiveData<T>().apply {
         value = initState
     }
 
