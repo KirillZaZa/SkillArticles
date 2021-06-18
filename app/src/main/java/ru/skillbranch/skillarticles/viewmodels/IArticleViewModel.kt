@@ -27,6 +27,6 @@ interface IArticleViewModel {
 
     fun handleToggleMenu()
 
-    fun handleSearchMenu(query: String?, resultList: List<Pair<Int, Int>>)
+    fun handleSearch(query: String?, resultList: List<Pair<Int, Int>>)
 
 }

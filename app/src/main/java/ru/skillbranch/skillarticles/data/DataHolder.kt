@@ -1,6 +1,5 @@
 package ru.skillbranch.skillarticles.data
 
-import android.util.Log
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -29,14 +28,13 @@ object LocalDataHolder {
                     date = Date(),
                     author = "Skill-Branch"
                 )
-
-                Log.d("Find ARTICLE", "findArticle: ${articleData.value}")
             }
 
         }
         return articleData
 
     }
+
     fun findArticlePersonalInfo(articleId: String): LiveData<ArticlePersonalInfo?> {
         GlobalScope.launch {
             if (isDelay) delay(500)
@@ -50,7 +48,6 @@ object LocalDataHolder {
     fun getAppSettings() = settings
     fun updateAppSettings(appSettings: AppSettings) {
         settings.value = appSettings
-        Log.d("Settings", "updateAppSettings: ${settings.value}")
     }
 
     fun updateArticlePersonalInfo(info: ArticlePersonalInfo) {

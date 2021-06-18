@@ -1,6 +1,6 @@
 package ru.skillbranch.skillarticles
 
-import android.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.jraska.livedata.TestObserver
 import com.jraska.livedata.test

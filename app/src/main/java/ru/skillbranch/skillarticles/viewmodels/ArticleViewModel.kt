@@ -24,7 +24,8 @@ class ArticleViewModel(private val articleId: String) :
                 date = article.date.format(),
                 isSearch = false,
                 searchPosition = 0,
-                searchQuery = null
+                searchQuery = null,
+                author = article.author as String?
             )
         }
 
@@ -77,8 +78,8 @@ class ArticleViewModel(private val articleId: String) :
         val msg = if (currentState.isLike) Notify.TextMessage("Mark is liked")
         else {
             Notify.ActionMessage(
-                "Dont like it anymore",
-                "No still like it",
+                "Don`t like it anymore",
+                "No, still like it",
                 toggleLike
             )
         }
@@ -94,11 +95,11 @@ class ArticleViewModel(private val articleId: String) :
         }
 
         toggleBookmark()
-        val msg = if (currentState.isLike) Notify.TextMessage("Mark is saved")
+        val msg = if (currentState.isBookmark) Notify.TextMessage("Add to bookmarks")
         else {
             Notify.ActionMessage(
-                "Article removed from saved",
-                "Article add to saved",
+                "Remove from bookmarks",
+                "Add to bookmarks",
                 toggleBookmark
             )
         }
@@ -136,7 +137,7 @@ class ArticleViewModel(private val articleId: String) :
      * TODO:
      * Апдейтить поиск (нахождение вариантов в тексте)
      */
-    override fun handleSearchMenu(query: String?, resultList: List<Pair<Int, Int>>) {
+    override fun handleSearch(query: String?, resultList: List<Pair<Int, Int>>) {
 
         /**
          *

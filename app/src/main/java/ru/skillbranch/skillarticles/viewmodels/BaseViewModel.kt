@@ -1,26 +1,38 @@
 package ru.skillbranch.skillarticles.viewmodels
 
 import androidx.annotation.UiThread
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 abstract class BaseViewModel<T>(initState: T) : ViewModel() {
-
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     val notifications = MutableLiveData<Event<Notify>>()
+
+    /***
+     * Инициализация начального состояния аргументом конструктоа, и объявления состояния как
+     * MediatorLiveData - медиатор исспользуется для того чтобы учитывать изменяемые данные модели
+     * и обновлять состояние ViewModel исходя из полученных данных
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
 
     val state: MediatorLiveData<T> = MediatorLiveData<T>().apply {
         value = initState
     }
 
-
-    //not null current state
-    protected val currentState
+    /***
+     * getter для получения not null значения текущего состояния ViewModel
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    val currentState
         get() = state.value!!
 
 
-    /**
-     *
-     * Лямбда выражение принимает в качестве аргмента текущий стейт (состояние)
-     * и она возвращает модифицированное состояние, которое присваивается текущему состоянию
+    /***
+     * лямбда выражение принимает в качестве аргумента текущее состояние и возвращает
+     * модифицированное состояние, которое присваивается текущему состоянию
      */
     @UiThread
     protected inline fun updateState(update: (currentState: T) -> T) {
@@ -28,27 +40,37 @@ abstract class BaseViewModel<T>(initState: T) : ViewModel() {
         state.value = updatedState
     }
 
+    /***
+     * функция для создания уведомления пользователя о событии (событие обрабатывается только один раз)
+     * соответсвенно при изменении конфигурации и пересоздании Activity уведомление не будет вызвано
+     * повторно
+     */
+    @UiThread
+    protected fun notify(content: Notify) {
+        notifications.value = Event(content)
+    }
 
+    /***
+     * более компактная форма записи observe() метода LiveData принимает последним аргумент лямбда
+     * выражение обрабатывающее изменение текущего стостояния
+     */
     fun observeState(owner: LifecycleOwner, onChanged: (newState: T) -> Unit) {
         state.observe(owner, Observer { onChanged(it!!) })
     }
 
-    fun observerNotifications(owner: LifecycleOwner, onNotify: (notification: Notify) -> Unit) {
+    /***
+     * более компактная форма записи observe() метода LiveData вызывает лямбда выражение обработчик
+     * только в том случае если уведомление не было уже обработанно ранее,
+     * реализует данное поведение с помощью EventObserver
+     */
+    fun observeNotifications(owner: LifecycleOwner, onNotify: (notification: Notify) -> Unit) {
         notifications.observe(owner, EventObserver { onNotify(it) })
     }
 
-
-    @UiThread
-    fun notify(content: Notify) {
-        notifications.value = Event(content)
-    }
-
-
-    /**
-     *
-     * Функция принимает источник данных и лямбда выражение, обрабатывающее поступающие данные
-     * Лямбда принимает новые данные и текущее состояние, изменяет его и возвращает
-     * модифицированное состояние и устанавливается как текущее
+    /***
+     * функция принимает источник данных и лямбда выражение обрабатывающее поступающие данные источника
+     * лямбда принимает новые данные и текущее состояние ViewModel в качестве аргументов,
+     * изменяет его и возвращает модифицированное состояние, которое устанавливается как текущее
      */
     protected fun <S> subscribeOnDataSource(
         source: LiveData<S>,
@@ -59,22 +81,23 @@ abstract class BaseViewModel<T>(initState: T) : ViewModel() {
         }
     }
 
-    class ViewModelFactory(private val params: String) : ViewModelProvider.Factory {
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(ArticleViewModel::class.java)) {
-                return ArticleViewModel(params) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
+}
+
+class ViewModelFactory(private val params: String) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ArticleViewModel::class.java)) {
+            return ArticleViewModel(params) as T
         }
-
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
-
 }
 
 class Event<out E>(private val content: E) {
     var hasBeenHandled = false
 
-    //Возвращает контент который еще не был обработан иначе null
+    /***
+     * возвращает контент который еще не был обработан иначе null
+     */
     fun getContentIfNotHandled(): E? {
         return if (hasBeenHandled) null
         else {
@@ -86,16 +109,15 @@ class Event<out E>(private val content: E) {
     fun peekContent(): E = content
 }
 
+/***
+ * в качестве аргумента конструктора принимает лямбда выражение обработчик в аргумент которой передается
+ * необработанное ранее событие получаемое в реализации метода Observer`a onChanged
+ */
 class EventObserver<E>(private val onEventUnhandledContent: (E) -> Unit) : Observer<Event<E>> {
 
-    //В качестве аргумента принимает лямбда выражение-обработчик в которую передается необработанное
-    //раннее событие получаемое в реализации метода Observer'a onChanged
     override fun onChanged(event: Event<E>?) {
-
-        /**
-         *
-         * Если есть необработанное событие (контент) передай в качестве аргумента в лямбду onEventUnhandledContent
-         */
+        //если есть необработанное событие (контент) передай в качестве аргумента в лямбду
+        // onEventUnhandledContent
         event?.getContentIfNotHandled()?.let {
             onEventUnhandledContent(it)
         }
@@ -108,14 +130,12 @@ sealed class Notify(val message: String) {
     data class ActionMessage(
         val msg: String,
         val actionLabel: String,
-        val actionHandler: (() -> Unit)?
+        val actionHandler: (() -> Unit)
     ) : Notify(msg)
-
 
     data class ErrorMessage(
         val msg: String,
-        val errLabel: String,
+        val errLabel: String?,
         val errHandler: (() -> Unit)?
     ) : Notify(msg)
 }
-

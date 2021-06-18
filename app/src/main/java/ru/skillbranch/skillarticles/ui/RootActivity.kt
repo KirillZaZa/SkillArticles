@@ -54,7 +54,7 @@ class RootActivity : AppCompatActivity() {
         setupSubmenu()
         Log.d("ONCREATE", "call")
 
-        viewModel = ViewModelProvider(this, BaseViewModel.ViewModelFactory("0"))
+        viewModel = ViewModelProvider(this, ViewModelFactory("0"))
             .get(ArticleViewModel::class.java)
 
 
@@ -63,7 +63,7 @@ class RootActivity : AppCompatActivity() {
             renderUi(it)
         }
 
-        viewModel.observerNotifications(this) {
+        viewModel.observeNotifications(this) {
             renderNotifications(it)
         }
 
@@ -192,7 +192,7 @@ class RootActivity : AppCompatActivity() {
         searchView.queryHint = "Search"
         searchView.setQuery(searchQuery, false)
         searchView.setOnSearchClickListener {
-            viewModel.handleSearchMenu("", emptyList())
+            viewModel.handleSearch("", emptyList())
         }
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -203,7 +203,7 @@ class RootActivity : AppCompatActivity() {
                 Log.d("OnChange", "onQueryTextChange: $newText")
                 val list = getWordsFound(newText)
                 isSearch = true
-                viewModel.handleSearchMenu(newText, list)
+                viewModel.handleSearch(newText, list)
                 return true
             }
 
