@@ -2,12 +2,12 @@ package ru.skillbranch.skillarticles.viewmodels
 
 import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
+import androidx.core.os.bundleOf
 import androidx.lifecycle.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import androidx.savedstate.SavedStateRegistryOwner
 
-abstract class BaseViewModel<T>(initState: T) : ViewModel() {
+abstract class BaseViewModel<T>(initState: T, private val savedStateHandle: SavedStateHandle) :
+    ViewModel() {
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     val notifications = MutableLiveData<Event<Notify>>()
 
@@ -17,7 +17,6 @@ abstract class BaseViewModel<T>(initState: T) : ViewModel() {
      * и обновлять состояние ViewModel исходя из полученных данных
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-
     val state: MediatorLiveData<T> = MediatorLiveData<T>().apply {
         value = initState
     }
@@ -45,9 +44,8 @@ abstract class BaseViewModel<T>(initState: T) : ViewModel() {
      * соответсвенно при изменении конфигурации и пересоздании Activity уведомление не будет вызвано
      * повторно
      */
-    @UiThread
     protected fun notify(content: Notify) {
-        notifications.value = Event(content)
+        notifications.postValue(Event(content))
     }
 
     /***
@@ -56,6 +54,20 @@ abstract class BaseViewModel<T>(initState: T) : ViewModel() {
      */
     fun observeState(owner: LifecycleOwner, onChanged: (newState: T) -> Unit) {
         state.observe(owner, Observer { onChanged(it!!) })
+    }
+
+
+    fun <D> observeSubState(
+        owner: LifecycleOwner,
+        transform: (T) -> D,
+        onChanged: (newState: D) -> Unit
+    ) {
+        state
+            .map(transform)
+            .distinctUntilChanged()
+            .observe(owner, Observer { onChanged(it!!) })
+
+
     }
 
     /***
@@ -81,15 +93,35 @@ abstract class BaseViewModel<T>(initState: T) : ViewModel() {
         }
     }
 
+
+    // Сохраняем стейт
+    fun saveState() {
+        savedStateHandle.set("state", currentState)
+    }
+
+    // Восстанавливаем стейт из bundle после смерти процесса
+    fun restoreState() {
+        val restoredState = savedStateHandle.get<T>("state")
+        restoredState ?: return
+        state.value = restoredState
+    }
+
 }
 
-class ViewModelFactory(private val params: String) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+class ViewModelFactory(owner: SavedStateRegistryOwner, private val params: String) :
+    AbstractSavedStateViewModelFactory(owner, bundleOf()) {
+
+    override fun <T : ViewModel?> create(
+        key: String,
+        modelClass: Class<T>,
+        handle: SavedStateHandle
+    ): T {
         if (modelClass.isAssignableFrom(ArticleViewModel::class.java)) {
-            return ArticleViewModel(params) as T
+            return ArticleViewModel(params, handle) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
+
 }
 
 class Event<out E>(private val content: E) {
@@ -124,18 +156,20 @@ class EventObserver<E>(private val onEventUnhandledContent: (E) -> Unit) : Obser
     }
 }
 
-sealed class Notify(val message: String) {
-    data class TextMessage(val msg: String) : Notify(msg)
+sealed class Notify() {
+    abstract val message: String
+
+    data class TextMessage(override val message: String) : Notify()
 
     data class ActionMessage(
-        val msg: String,
+        override val message: String,
         val actionLabel: String,
         val actionHandler: (() -> Unit)
-    ) : Notify(msg)
+    ) : Notify()
 
     data class ErrorMessage(
-        val msg: String,
+        override val message: String,
         val errLabel: String?,
         val errHandler: (() -> Unit)?
-    ) : Notify(msg)
+    ) : Notify()
 }
