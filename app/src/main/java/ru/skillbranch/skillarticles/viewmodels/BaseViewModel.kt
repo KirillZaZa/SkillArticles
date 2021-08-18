@@ -1,13 +1,20 @@
 package ru.skillbranch.skillarticles.viewmodels
 
+import android.util.Log
 import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import androidx.core.os.bundleOf
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistryOwner
+import java.security.Key
 
 abstract class BaseViewModel<T>(initState: T, private val savedStateHandle: SavedStateHandle) :
     ViewModel() {
+
+    companion object{
+        private const val KEY_STATE = "state"
+    }
+
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     val notifications = MutableLiveData<Event<Notify>>()
 
@@ -94,16 +101,17 @@ abstract class BaseViewModel<T>(initState: T, private val savedStateHandle: Save
     }
 
 
-    // Сохраняем стейт
     fun saveState() {
-        savedStateHandle.set("state", currentState)
+        Log.e("BaseViewModel", "save state $currentState")
+        savedStateHandle.set(KEY_STATE, currentState)
     }
 
-    // Восстанавливаем стейт из bundle после смерти процесса
     fun restoreState() {
-        val restoredState = savedStateHandle.get<T>("state")
+        val restoredState = savedStateHandle.get<T>(KEY_STATE)
+        Log.e("BaseViewModel", "save state $restoredState")
         restoredState ?: return
         state.value = restoredState
+
     }
 
 }

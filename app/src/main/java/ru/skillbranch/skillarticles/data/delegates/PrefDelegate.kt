@@ -21,25 +21,11 @@ class PrefDelegate<T>(private val defaultValue: T, private val customKey: String
         val key = createKey(customKey ?: prop.name, defaultValue)
         return object : ReadWriteProperty<PrefManager, T> {
 
-            private var _storedValue: T? = null
+            private var storedValue: T? = null
 
-            override fun getValue(thisRef: PrefManager, property: KProperty<*>): T {
-                if (_storedValue == null) {
-                    val flowValue = thisRef.dataStore.data
-                        .map { prefs ->
-                            prefs[key] ?: defaultValue
-                        }
-                    _storedValue = runBlocking(Dispatchers.IO) {
-                        flowValue.first()
-                    }
-                }
-
-
-                return _storedValue!!
-            }
 
             override fun setValue(thisRef: PrefManager, property: KProperty<*>, value: T) {
-                _storedValue = value
+                storedValue = value
 
                 thisRef.scope.launch {
                     thisRef.dataStore.edit { prefs ->
@@ -48,6 +34,23 @@ class PrefDelegate<T>(private val defaultValue: T, private val customKey: String
                 }
 
             }
+
+            override fun getValue(thisRef: PrefManager, property: KProperty<*>): T {
+                if (storedValue == null) {
+                    val flowValue = thisRef.dataStore.data
+                        .map { prefs ->
+                            prefs[key] ?: defaultValue
+                        }
+                    storedValue = runBlocking(Dispatchers.IO) {
+                        flowValue.first()
+                    }
+                }
+
+
+                return storedValue!!
+            }
+
+
 
         }
 

@@ -50,7 +50,6 @@ class RootActivity : AppCompatActivity(), IArticleView {
         setupBottombar()
         setupSubmenu()
 
-
         viewModel.observeState(this, ::renderUi)
         viewModel.observeSubState(this, ArticleState::toBottombarData, ::renderBotombar)
         viewModel.observeSubState(this, ArticleState::toSubmenuData, ::renderSubmenu)

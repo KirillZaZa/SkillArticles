@@ -10,8 +10,9 @@ import ru.skillbranch.skillarticles.extensions.toAppSettings
 import ru.skillbranch.skillarticles.extensions.toArticlePersonalInfo
 import ru.skillbranch.skillarticles.extensions.format
 import ru.skillbranch.skillarticles.extensions.indexesOf
+import java.io.Serializable
 
-class ArticleViewModel(private val articleId: String, val savedStateHandle: SavedStateHandle) :
+class ArticleViewModel(private val articleId: String, savedStateHandle: SavedStateHandle) :
     BaseViewModel<ArticleState>(ArticleState(), savedStateHandle), IArticleViewModel {
     private val repository = ArticleRepository()
 
@@ -179,7 +180,7 @@ data class ArticleState(
     val poster: String? = null, //обложка статьи
     val content: List<String> = emptyList(), //контент
     val reviews: List<Any> = emptyList() //комментарии
-)
+) : Serializable
 
 data class BottombarData(
     val isLike: Boolean = false,
