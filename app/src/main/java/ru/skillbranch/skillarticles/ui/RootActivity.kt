@@ -5,11 +5,13 @@ import android.text.Selection
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.method.ScrollingMovementMethod
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.AppCompatImageView
@@ -17,6 +19,8 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.text.getSpans
 import androidx.core.view.children
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.snackbar.Snackbar
 import ru.skillbranch.skillarticles.R
 import ru.skillbranch.skillarticles.databinding.ActivityRootBinding
@@ -33,15 +37,21 @@ import ru.skillbranch.skillarticles.viewmodels.*
 class RootActivity : AppCompatActivity(), IArticleView {
 
     private lateinit var searchView: SearchView
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    var viewModelFactory: ViewModelProvider.Factory = ViewModelFactory(this, "0")
     private val viewModel: ArticleViewModel by viewModels { ViewModelFactory(this, "0") }
+
     private val vb: ActivityRootBinding by viewBinding(ActivityRootBinding::inflate)
     private val vbBottombar
         get() = vb.bottombar.binding
     private val vbSubmenu
         get() = vb.submenu.binding
 
-    private val bgColor: Int by AttrValue(R.attr.colorSecondary)
-    private val fgColor: Int by AttrValue(R.attr.colorOnSecondary)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    val bgColor: Int by AttrValue(R.attr.colorSecondary)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    val fgColor: Int by AttrValue(R.attr.colorOnSecondary)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,11 +71,6 @@ class RootActivity : AppCompatActivity(), IArticleView {
     override fun onSaveInstanceState(outState: Bundle) {
         viewModel.saveState()
         super.onSaveInstanceState(outState)
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        viewModel.restoreState()
-        super.onRestoreInstanceState(savedInstanceState)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -149,6 +154,7 @@ class RootActivity : AppCompatActivity(), IArticleView {
             btnTextDown.setOnClickListener { viewModel.handleDownText() }
             switchMode.setOnClickListener { viewModel.handleNightMode() }
         }
+
     }
 
     override fun setupBottombar() {
@@ -197,11 +203,12 @@ class RootActivity : AppCompatActivity(), IArticleView {
     override fun renderUi(data: ArticleState) {
         with(vb.tvTextContent) {
             textSize = if (data.isBigText) 18f else 14f
-            setText(
-                if (data.isLoadingContent) "loading" else data.content.first(),
-                TextView.BufferType.SPANNABLE
-            )
             movementMethod = ScrollingMovementMethod()
+            val content = if (data.isLoadingContent) "loading" else data.content.first()
+            if (text.toString() == content) return@with
+            setText(content, TextView.BufferType.SPANNABLE)
+
+
         }
 
         delegate.localNightMode =
@@ -211,7 +218,7 @@ class RootActivity : AppCompatActivity(), IArticleView {
 
 
 
-        with(vb.toolbar){
+        with(vb.toolbar) {
             subtitle = data.category ?: "loading"
             title = data.title ?: "loading"
             if (data.categoryIcon != null) vb.toolbar.logo = getDrawable(data.categoryIcon as Int)
@@ -219,6 +226,7 @@ class RootActivity : AppCompatActivity(), IArticleView {
 
 
         if (data.isSearch) {
+            Log.e("RootActivity", "${data.searchResults}", )
             renderSearchResult(data.searchResults)
             renderSearchPosition(data.searchPosition)
         } else clearSearchResult()
@@ -258,13 +266,13 @@ class RootActivity : AppCompatActivity(), IArticleView {
     }
 
     override fun renderSearchPosition(searchPosition: Int) {
-        val content = vb.tvTextContent.text  as Spannable
+        val content = vb.tvTextContent.text as Spannable
         val spans = content.getSpans<SearchSpan>()
 
         content.getSpans<SearchFocusSpan>()
             .forEach { content.removeSpan(it) }
 
-        if(spans.isNotEmpty()){
+        if (spans.isNotEmpty()) {
             val result = spans[searchPosition]
 
             Selection.setSelection(content, content.getSpanStart(result))

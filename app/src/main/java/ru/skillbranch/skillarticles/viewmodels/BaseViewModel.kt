@@ -1,18 +1,20 @@
 package ru.skillbranch.skillarticles.viewmodels
 
+import android.os.Bundle
 import android.util.Log
 import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import androidx.core.os.bundleOf
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistryOwner
+import java.io.Serializable
 import java.security.Key
 
 abstract class BaseViewModel<T>(initState: T, private val savedStateHandle: SavedStateHandle) :
-    ViewModel() {
+    ViewModel() where T: VMState{
 
     companion object{
-        private const val KEY_STATE = "state"
+        const val KEY_STATE = "state"
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
@@ -25,7 +27,11 @@ abstract class BaseViewModel<T>(initState: T, private val savedStateHandle: Save
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     val state: MediatorLiveData<T> = MediatorLiveData<T>().apply {
-        value = initState
+        val restoredState = savedStateHandle.get<Any>(KEY_STATE)?.let {
+            if (it is Bundle) initState.fromBundle(it) as? T
+            else it as T
+        }
+        value = restoredState ?: initState
     }
 
     /***
@@ -106,13 +112,6 @@ abstract class BaseViewModel<T>(initState: T, private val savedStateHandle: Save
         savedStateHandle.set(KEY_STATE, currentState)
     }
 
-    fun restoreState() {
-        val restoredState = savedStateHandle.get<T>(KEY_STATE)
-        Log.e("BaseViewModel", "save state $restoredState")
-        restoredState ?: return
-        state.value = restoredState
-
-    }
 
 }
 
@@ -180,4 +179,10 @@ sealed class Notify() {
         val errLabel: String?,
         val errHandler: (() -> Unit)?
     ) : Notify()
+}
+
+public interface VMState : Serializable{
+    fun toBundle() : Bundle
+
+    fun fromBundle(bundle: Bundle): VMState?
 }

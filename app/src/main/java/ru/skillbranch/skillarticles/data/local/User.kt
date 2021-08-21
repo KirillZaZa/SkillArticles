@@ -1,5 +1,8 @@
 package ru.skillbranch.skillarticles.data.local
 
+import java.io.Serializable
+
+
 data class User(
     val id: String,
     val name: String,
@@ -7,5 +10,5 @@ data class User(
     val rating: Int = 0,
     val respect: Int = 0,
     val about: String? = null
-) {
+): Serializable {
 }
