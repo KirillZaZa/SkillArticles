@@ -33,16 +33,17 @@ class UserJsonAdapter : JsonAdapter<User> {
         val list = jsonObject.apply {
             drop(8)
             dropLast(1)
-        }.toList().dropLastUntil { it == ':' }
+        }.split(",").map { it.trim() }.dropLastUntil { it == ":" }
+
 
 
         return User(
-            id = list[0].toString(),
-            name = list[1].toString(),
-            avatar = list[3].toString(),
-            rating = list[4].digitToInt(),
-            respect = list[5].digitToInt(),
-            about = list[6].toString()
+            id = list[0],
+            name = list[1],
+            avatar = list[3],
+            rating = list[4].toInt(),
+            respect = list[5].toInt(),
+            about = list[6]
         )
     }
 
