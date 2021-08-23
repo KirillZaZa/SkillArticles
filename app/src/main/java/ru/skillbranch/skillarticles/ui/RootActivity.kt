@@ -186,7 +186,7 @@ class RootActivity : AppCompatActivity(), IArticleView {
             btnBookmark.isChecked = data.isBookmark
         }
 
-        if (data.isSearch) showSearchBar(data.resultCount, data.searchPosition)
+        if (data.isSearch) showSearchBar(data.resultsCount, data.searchPosition)
         else hideSearchBar()
     }
 

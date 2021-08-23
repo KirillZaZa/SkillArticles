@@ -230,7 +230,7 @@ data class BottombarData(
     val isBookmark: Boolean = true,
     val isShowMenu: Boolean = false,
     val isSearch: Boolean = false,
-    val resultCount: Int = 0,
+    val resultsCount: Int = 0,
     val searchPosition: Int = 0
 )
 

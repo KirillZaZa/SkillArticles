@@ -6,10 +6,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.json.JSONObject
 import ru.skillbranch.skillarticles.data.PrefManager
 import ru.skillbranch.skillarticles.data.adapters.JsonAdapter
-import ru.skillbranch.skillarticles.data.local.User
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
