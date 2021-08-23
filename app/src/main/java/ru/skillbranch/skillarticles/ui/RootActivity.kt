@@ -19,7 +19,6 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.text.getSpans
 import androidx.core.view.children
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.snackbar.Snackbar
 import ru.skillbranch.skillarticles.R

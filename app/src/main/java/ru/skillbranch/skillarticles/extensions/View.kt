@@ -1,8 +1,6 @@
 package ru.skillbranch.skillarticles.extensions
 
-import android.util.Log
 import android.view.View
-import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
