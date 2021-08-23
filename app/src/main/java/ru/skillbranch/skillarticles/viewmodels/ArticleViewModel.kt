@@ -223,6 +223,25 @@ data class ArticleState(
         )
     }
 
+    fun toBottombarData(): BottombarData {
+        return BottombarData(
+            isLike,
+            isBookmark,
+            isShowMenu,
+            isSearch,
+            searchResults.size,
+            searchPosition
+        )
+    }
+
+    fun toSubmenuData(): SubmenuData {
+        return SubmenuData(
+            isShowMenu,
+            isBigText,
+            isDarkMode
+        )
+    }
+
 }
 
 data class BottombarData(

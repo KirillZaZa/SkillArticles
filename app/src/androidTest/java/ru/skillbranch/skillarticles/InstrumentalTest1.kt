@@ -29,7 +29,6 @@ import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import ru.skillbranch.skillarticles.data.LocalDataHolder
 import ru.skillbranch.skillarticles.data.NetworkDataHolder
-import ru.skillbranch.skillarticles.data.repositories.ArticleRepository
 import ru.skillbranch.skillarticles.extensions.indexesOf
 import ru.skillbranch.skillarticles.extensions.setMarginOptionally
 import ru.skillbranch.skillarticles.ui.RootActivity
@@ -399,6 +398,7 @@ class InstrumentedTest1 {
     }
 
 }
+
 
 fun withToolbarTitle(textMatcher: Matcher<CharSequence?>): Matcher<View?>? {
     return object : BoundedMatcher<View?, Toolbar>(Toolbar::class.java) {

@@ -16,24 +16,7 @@ fun ArticleState.toArticlePersonalInfo(): ArticlePersonalInfo {
 }
 
 
-fun ArticleState.toBottombarData(): BottombarData {
-    return BottombarData(
-        isLike,
-        isBookmark,
-        isShowMenu,
-        isSearch,
-        searchResults.size,
-        searchPosition
-    )
-}
 
-fun ArticleState.toSubmenuData(): SubmenuData {
-    return SubmenuData(
-        isShowMenu,
-        isBigText,
-        isDarkMode
-    )
-}
 
 
 fun ArticleState.asMap(): Map<String, Any?> = mapOf(
