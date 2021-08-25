@@ -17,7 +17,7 @@ class UserJsonAdapter : JsonAdapter<User> {
             .joinToString("")
     }
 
-    fun List<String?>.dropColons(): List<String>{
+    private fun List<String?>.dropColons(): List<String>{
         val newList = arrayListOf<String>()
         for(element in this){
             val newElem = element?.dropWhile{ it != ' '}
@@ -42,16 +42,16 @@ class UserJsonAdapter : JsonAdapter<User> {
         return User(
             id = list[0],
             name = list[1],
-            avatar = list[3],
-            rating = list[4].toInt(),
-            respect = list[5].toInt(),
-            about = list[6]
+            avatar = list[2],
+            rating = list[3].toInt(),
+            respect = list[4].toInt(),
+            about = list[5]
         )
     }
 
     override fun getSerializeObj(): String {
         return String.format(
-            "User = {id:%s, name:%s, avatar:%s, rating:%d, respect:%d, about:%s}",
+            "User = {id: %s,name: %s,avatar: %s,rating: %d,respect: %d,about: %s}",
             user.id, user.name, user.avatar, user.rating, user.respect, user.about
         )
     }
