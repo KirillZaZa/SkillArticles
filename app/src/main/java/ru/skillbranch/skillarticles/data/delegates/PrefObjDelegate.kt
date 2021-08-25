@@ -30,7 +30,7 @@ class PrefObjDelegate<T>(
                 if(obj == null){
                     val flowValue = thisRef.dataStore.data
                         .map { prefs->
-                            prefs[key] ?: adapter.getSerializeObj()
+                            prefs[key] ?: "User = { }"
                         }
                     obj = runBlocking(Dispatchers.IO) {
                         flowValue.first()
@@ -38,7 +38,7 @@ class PrefObjDelegate<T>(
                 }
 
 
-                return adapter.getDeserializeObj(obj!! as String)
+                return adapter.fromJson(obj as String)!!
             }
 
             override fun setValue(thisRef: PrefManager, property: KProperty<*>, value: T) {
