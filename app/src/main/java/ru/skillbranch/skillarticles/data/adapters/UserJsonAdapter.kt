@@ -17,18 +17,27 @@ class UserJsonAdapter : JsonAdapter<User> {
             .joinToString("")
     }
 
+    fun List<String?>.dropColons(): List<String>{
+        val newList = arrayListOf<String>()
+        for(element in this){
+            val newElem = element?.dropWhile{ it != ' '}
+            if (newElem != null) {
+                newList.add(newElem.trim())
+            }
+        }
 
+        return newList
+    }
 
 
     override fun getDeserializeObj(jsonObject: String): User {
-        val list = jsonObject.apply {
-            drop(8)
-            dropLast(1)
-        }.split(",").toList().apply {
-            forEach { str->
-                str.dropWhile { it == ' ' }.trim()
-            }
-        }
+        val list = jsonObject
+            .drop(8)
+            .dropLast(1)
+            .split(",")
+            .dropColons()
+
+
 
         return User(
             id = list[0],
@@ -42,7 +51,7 @@ class UserJsonAdapter : JsonAdapter<User> {
 
     override fun getSerializeObj(): String {
         return String.format(
-            "User = {id: %s, name: %s, avatar: %s, rating: %d, respect: %d, about: %s}",
+            "User = {id:%s, name:%s, avatar:%s, rating:%d, respect:%d, about:%s}",
             user.id, user.name, user.avatar, user.rating, user.respect, user.about
         )
     }
