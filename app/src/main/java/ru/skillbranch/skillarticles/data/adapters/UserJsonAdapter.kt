@@ -17,25 +17,18 @@ class UserJsonAdapter : JsonAdapter<User> {
             .joinToString("")
     }
 
-    private fun <T> List<T>.dropLastUntil(predicate: (T) -> Boolean): List<T>{
-        val list = mutableListOf<T>()
-        for(element in this){
-            if(predicate(element)){
-                list.add(element)
-            }
-        }
 
-        return list
-    }
 
 
     override fun getDeserializeObj(jsonObject: String): User {
         val list = jsonObject.apply {
             drop(8)
             dropLast(1)
-        }.split(",").map { it.trim() }.dropLastUntil { it == ":" }
-
-
+        }.split(",").toList().apply {
+            forEach { str->
+                str.dropWhile { it == ':' }.trim()
+            }
+        }
 
         return User(
             id = list[0],
