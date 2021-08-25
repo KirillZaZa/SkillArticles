@@ -26,7 +26,7 @@ class UserJsonAdapter : JsonAdapter<User> {
             dropLast(1)
         }.split(",").toList().apply {
             forEach { str->
-                str.dropWhile { it == ':' }.trim()
+                str.dropWhile { it == ' ' }.trim()
             }
         }
 
